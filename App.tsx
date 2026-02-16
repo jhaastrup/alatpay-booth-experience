@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AppView, Visitor } from './types';
-import { STORAGE_KEYS } from './constants';
+import { STORAGE_KEYS, WIN_PROBABILITY } from './constants';
 import WelcomeScreen from './components/WelcomeScreen';
 import SignupForm from './components/SignupForm';
 import ResultScreen from './components/ResultScreen';
@@ -13,7 +13,7 @@ const App: React.FC = () => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [currentVisitor, setCurrentVisitor] = useState<Visitor | null>(null);
 
-  // Persistence logic (Local backup)
+  // Persistence logic (Local backup for the device being used)
   useEffect(() => {
     const storedVisitors = localStorage.getItem(STORAGE_KEYS.VISITORS);
     if (storedVisitors) {
@@ -35,27 +35,40 @@ const App: React.FC = () => {
   }, []);
 
   const handleAddVisitor = async (visitorData: Omit<Visitor, 'id' | 'visitorNumber' | 'isWinner' | 'timestamp'>) => {
-    // Note: Since users are on their own devices, the "visitorNumber" 
-    // here is relative to their device. For a true global counter, 
-    // the backend/Google Script should assign the number.
-    // For this UI, we'll generate a random-ish lucky factor.
-    
-    const isWinner = Math.random() > 0.7; // 30% chance for individuals on their own devices
+    // 1. Determine if this user should win based on probability (currently 65%)
+    const isWinner = Math.random() < WIN_PROBABILITY;
+
+    // 2. Generate a random base number between 100 and 999
+    // We use a random number to simulate the visitor sequence on their own device
+    let baseNumber = Math.floor(Math.random() * 899) + 100;
+
+    // 3. Force the number to be ODD if they win, and EVEN if they lose
+    // "Every odd visitor wins" is the rule. 
+    // We ensure 65% of people get an ODD number so they win.
+    let visitorNumber: number;
+    if (isWinner) {
+      // Force Odd: if even, add 1. If odd, keep it.
+      visitorNumber = baseNumber % 2 === 0 ? baseNumber + 1 : baseNumber;
+    } else {
+      // Force Even: if odd, add 1. If even, keep it.
+      visitorNumber = baseNumber % 2 !== 0 ? baseNumber + 1 : baseNumber;
+    }
 
     const newVisitor: Visitor = {
       ...visitorData,
       id: crypto.randomUUID(),
-      visitorNumber: Math.floor(Math.random() * 900) + 100, // Random number for effect
+      visitorNumber,
       isWinner,
       timestamp: new Date().toISOString()
     };
 
-    // 1. Save locally as backup
+    // Save locally to the visitor's device (Browser storage)
     const updatedVisitors = [...visitors, newVisitor];
     setVisitors(updatedVisitors);
     localStorage.setItem(STORAGE_KEYS.VISITORS, JSON.stringify(updatedVisitors));
     
-    // 2. Submit to Central Hub (Google Sheets / API)
+    // Submit to the central Google Sheet (Central Hub)
+    // This allows multiple devices to contribute to one single sheet
     await submitLeadToCentralHub(newVisitor);
 
     setCurrentVisitor(newVisitor);
