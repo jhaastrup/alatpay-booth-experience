@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppView, Visitor } from './types';
 import { STORAGE_KEYS, WIN_PROBABILITY } from './constants';
@@ -13,7 +12,6 @@ const App: React.FC = () => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [currentVisitor, setCurrentVisitor] = useState<Visitor | null>(null);
 
-  // Persistence logic (Local backup for the device being used)
   useEffect(() => {
     const storedVisitors = localStorage.getItem(STORAGE_KEYS.VISITORS);
     if (storedVisitors) {
@@ -35,22 +33,14 @@ const App: React.FC = () => {
   }, []);
 
   const handleAddVisitor = async (visitorData: Omit<Visitor, 'id' | 'visitorNumber' | 'isWinner' | 'timestamp'>) => {
-    // 1. Determine if this user should win based on probability (currently 65%)
+    // 1. Instant Calculation
     const isWinner = Math.random() < WIN_PROBABILITY;
-
-    // 2. Generate a random base number between 100 and 999
-    // We use a random number to simulate the visitor sequence on their own device
-    let baseNumber = Math.floor(Math.random() * 899) + 100;
-
-    // 3. Force the number to be ODD if they win, and EVEN if they lose
-    // "Every odd visitor wins" is the rule. 
-    // We ensure 65% of people get an ODD number so they win.
+    const baseNumber = Math.floor(Math.random() * 899) + 100;
+    
     let visitorNumber: number;
     if (isWinner) {
-      // Force Odd: if even, add 1. If odd, keep it.
       visitorNumber = baseNumber % 2 === 0 ? baseNumber + 1 : baseNumber;
     } else {
-      // Force Even: if odd, add 1. If even, keep it.
       visitorNumber = baseNumber % 2 !== 0 ? baseNumber + 1 : baseNumber;
     }
 
@@ -62,17 +52,19 @@ const App: React.FC = () => {
       timestamp: new Date().toISOString()
     };
 
-    // Save locally to the visitor's device (Browser storage)
+    // 2. Immediate Local State Update
     const updatedVisitors = [...visitors, newVisitor];
     setVisitors(updatedVisitors);
     localStorage.setItem(STORAGE_KEYS.VISITORS, JSON.stringify(updatedVisitors));
     
-    // Submit to the central Google Sheet (Central Hub)
-    // This allows multiple devices to contribute to one single sheet
-    await submitLeadToCentralHub(newVisitor);
-
     setCurrentVisitor(newVisitor);
+    
+    // 3. FAST TRANSITION: Switch view before network calls start
     setView(AppView.RESULT);
+
+    // 4. BACKGROUND SUBMISSION: Fire and forget (don't await)
+    // This removes the 2-3 second delay usually caused by Google Apps Script
+    submitLeadToCentralHub(newVisitor).catch(err => console.error("Background submission failed", err));
   };
 
   const resetCounter = () => {
