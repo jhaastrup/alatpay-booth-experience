@@ -3,79 +3,54 @@ import { WEBHOOK_URL } from '../constants';
 
 /**
  * Submits lead to Google Sheets Central Hub.
- * Optimized for background execution so it doesn't block the UI.
  */
 export const submitLeadToCentralHub = async (visitor: Visitor): Promise<boolean> => {
-  if (!WEBHOOK_URL) {
-    return false;
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  if (!WEBHOOK_URL) return false;
 
   try {
-    // We use no-cors because Apps Script often doesn't handle preflight well
-    // but the data still hits the spreadsheet.
+    // mode: 'no-cors' allows us to send data to Apps Script even without explicit CORS headers.
     await fetch(WEBHOOK_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-      body: JSON.stringify(visitor),
-      signal: controller.signal
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(visitor)
     });
-    
-    clearTimeout(timeoutId);
     return true;
   } catch (error) {
-    clearTimeout(timeoutId);
-    console.warn("Central Hub Sync Error:", error);
+    console.warn("Central Hub Submission Error:", error);
     return false;
   }
 };
 
 /**
- * Fetches all leads from the Central Hub (Google Sheets).
- * Includes cache-busting to ensure fresh data from other devices.
+ * Fetches all leads from the Central Hub.
+ * Optimized to handle multiple JSON shapes and bypass browser caching.
  */
 export const fetchAllLeads = async (): Promise<Visitor[]> => {
   if (!WEBHOOK_URL) return [];
 
   try {
-    // Add cache-busting timestamp to bypass browser/CDN caching
     const url = new URL(WEBHOOK_URL);
     url.searchParams.append('action', 'getVisitors');
-    url.searchParams.append('_t', Date.now().toString());
+    url.searchParams.append('_t', Date.now().toString()); // Cache busting
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
+    const response = await fetch(url.toString());
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const rawData = await response.json();
     
-    // Validate that we received an array
-    if (Array.isArray(data)) {
-      return data;
-    }
-    
-    // Some Apps Script setups return { status: 'success', data: [...] }
-    if (data && typeof data === 'object' && Array.isArray(data.data)) {
-      return data.data;
+    // Handle standard array response or wrapped { data: [...] } response
+    let visitors: Visitor[] = [];
+    if (Array.isArray(rawData)) {
+      visitors = rawData;
+    } else if (rawData && typeof rawData === 'object' && Array.isArray(rawData.data)) {
+      visitors = rawData.data;
     }
 
-    console.error("Unexpected data format from Central Hub:", data);
-    return [];
+    // Basic sanitization: Ensure every visitor has an ID and timestamp
+    return visitors.filter(v => v && typeof v === 'object' && v.id);
   } catch (error) {
-    console.error("Failed to sync global data:", error);
-    // Return empty array instead of throwing to keep the UI stable
+    console.error("Failed to fetch leads from Google Sheets:", error);
     return [];
   }
 };

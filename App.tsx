@@ -61,7 +61,7 @@ const App: React.FC = () => {
   };
 
   const resetCounter = () => {
-    if (window.confirm("Are you sure you want to reset local data? This does not affect the central spreadsheet.")) {
+    if (window.confirm("Reset LOCAL device cache? This will NOT delete records from the Google Sheet.")) {
       setVisitors([]);
       localStorage.removeItem(STORAGE_KEYS.VISITORS);
     }
@@ -74,7 +74,7 @@ const App: React.FC = () => {
       <div className="fixed top-0 -left-20 w-72 h-72 bg-red-400 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
       <div className="fixed bottom-0 -right-20 w-72 h-72 bg-red-600 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
 
-      <main className={`w-full z-10 transition-all duration-500 ${isAdmin ? 'max-w-7xl px-4 md:px-8' : 'max-w-md'}`}>
+      <main className={`w-full z-10 transition-all duration-500 ${isAdmin ? 'max-w-[1600px] px-6 md:px-12' : 'max-w-md'}`}>
         {view === AppView.WELCOME && (
           <WelcomeScreen onStart={() => setView(AppView.FORM)} />
         )}
