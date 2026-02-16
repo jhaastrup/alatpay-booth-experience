@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Visitor } from '../types';
 
 interface SignupFormProps {
-  onSubmit: (data: Omit<Visitor, 'id' | 'visitorNumber' | 'isWinner' | 'timestamp'>) => void;
+  onSubmit: (data: Omit<Visitor, 'id' | 'visitorNumber' | 'isWinner' | 'timestamp'>) => Promise<void> | void;
 }
 
 const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
@@ -15,6 +14,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Use a ref to prevent double-clicks synchronously before the next render cycle
+  const submittingRef = useRef(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -25,15 +27,24 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Immediate guard against double-submission
+    if (submittingRef.current) return;
+
     if (validate()) {
+      submittingRef.current = true;
       setIsSubmitting(true);
-      // Simulate slight delay for effect
-      setTimeout(() => {
-        onSubmit(formData);
+      
+      try {
+        // Direct call without artificial setTimeout delay
+        await onSubmit(formData);
+      } catch (error) {
+        console.error("Submission failed:", error);
         setIsSubmitting(false);
-      }, 800);
+        submittingRef.current = false;
+      }
     }
   };
 
@@ -50,8 +61,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
           <input
             type="text"
             placeholder="John Doe"
+            disabled={isSubmitting}
             required
-            className={`w-full p-4 bg-white text-gray-900 border-2 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${errors.name ? 'border-red-400' : 'border-gray-100'}`}
+            className={`w-full p-4 bg-white text-gray-900 border-2 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${errors.name ? 'border-red-400' : 'border-gray-100'} ${isSubmitting ? 'opacity-50' : ''}`}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
@@ -63,8 +75,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
           <input
             type="email"
             placeholder="john@example.com"
+            disabled={isSubmitting}
             required
-            className={`w-full p-4 bg-white text-gray-900 border-2 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${errors.email ? 'border-red-400' : 'border-gray-100'}`}
+            className={`w-full p-4 bg-white text-gray-900 border-2 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${errors.email ? 'border-red-400' : 'border-gray-100'} ${isSubmitting ? 'opacity-50' : ''}`}
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
@@ -76,8 +89,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
           <input
             type="tel"
             placeholder="0801 234 5678"
+            disabled={isSubmitting}
             required
-            className={`w-full p-4 bg-white text-gray-900 border-2 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${errors.phone ? 'border-red-400' : 'border-gray-100'}`}
+            className={`w-full p-4 bg-white text-gray-900 border-2 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${errors.phone ? 'border-red-400' : 'border-gray-100'} ${isSubmitting ? 'opacity-50' : ''}`}
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           />
@@ -89,7 +103,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSubmit }) => {
           <input
             type="text"
             placeholder="Your Company Name"
-            className="w-full p-4 bg-white text-gray-900 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300"
+            disabled={isSubmitting}
+            className={`w-full p-4 bg-white text-gray-900 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[#be0b27] outline-none transition-all placeholder:text-gray-300 ${isSubmitting ? 'opacity-50' : ''}`}
             value={formData.organization}
             onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
           />

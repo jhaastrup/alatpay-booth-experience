@@ -3,9 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 
 export const getPersonalizedMessage = async (name: string, isWinner: boolean, organization?: string) => {
   try {
-    // Vite uses import.meta.env, while some environments use process.env
-    const apiKey = (import.meta as any).env?.VITE_API_KEY || process.env.API_KEY || '';
-    const ai = new GoogleGenAI({ apiKey });
+    // Initialize GoogleGenAI using process.env.API_KEY as per guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const context = organization ? `from ${organization}` : "";
     
     const prompt = isWinner 
