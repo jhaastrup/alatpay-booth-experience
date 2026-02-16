@@ -10,16 +10,17 @@ export const submitLeadToCentralHub = async (visitor: Visitor): Promise<boolean>
     return false;
   }
 
-  // Use a controller to ensure we don't hang if network is slow
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
+    // We use no-cors because Apps Script often doesn't handle preflight well
+    // but the data still hits the spreadsheet.
     await fetch(WEBHOOK_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: {
-        'Content-Type': 'text/plain', // Use text/plain for no-cors to avoid preflight
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify(visitor),
       signal: controller.signal
@@ -36,18 +37,45 @@ export const submitLeadToCentralHub = async (visitor: Visitor): Promise<boolean>
 
 /**
  * Fetches all leads from the Central Hub (Google Sheets).
- * Requires the Google Apps Script to handle doGet requests.
+ * Includes cache-busting to ensure fresh data from other devices.
  */
 export const fetchAllLeads = async (): Promise<Visitor[]> => {
   if (!WEBHOOK_URL) return [];
 
   try {
-    const response = await fetch(`${WEBHOOK_URL}?action=getVisitors`);
-    if (!response.ok) throw new Error('Failed to fetch global data');
+    // Add cache-busting timestamp to bypass browser/CDN caching
+    const url = new URL(WEBHOOK_URL);
+    url.searchParams.append('action', 'getVisitors');
+    url.searchParams.append('_t', Date.now().toString());
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    
+    // Validate that we received an array
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    // Some Apps Script setups return { status: 'success', data: [...] }
+    if (data && typeof data === 'object' && Array.isArray(data.data)) {
+      return data.data;
+    }
+
+    console.error("Unexpected data format from Central Hub:", data);
+    return [];
   } catch (error) {
     console.error("Failed to sync global data:", error);
+    // Return empty array instead of throwing to keep the UI stable
     return [];
   }
 };

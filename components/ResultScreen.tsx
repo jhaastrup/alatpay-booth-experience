@@ -32,9 +32,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ visitor, onReset }) => {
 
   return (
     <div className="space-y-6 animate-in zoom-in fade-in duration-300">
+      {/* Confetti only for winners */}
       {visitor.isWinner && <Confetti />}
 
-      <div className={`glass rounded-3xl p-8 shadow-2xl text-center space-y-6 overflow-hidden relative ${visitor.isWinner ? 'border-4 border-[#be0b27]' : ''}`}>
+      <div className={`glass rounded-3xl p-8 shadow-2xl text-center space-y-6 overflow-hidden relative transition-all duration-500 ${visitor.isWinner ? 'border-4 border-[#be0b27]' : 'border border-gray-100'}`}>
         {visitor.isWinner && (
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-400 via-[#be0b27] to-red-400 animate-pulse"></div>
         )}
@@ -60,23 +61,33 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ visitor, onReset }) => {
             </div>
           ) : (
             <div className="animate-in slide-in-from-bottom-4 duration-500 delay-150">
-              <div className="text-6xl mb-4">✨</div>
-              <h2 className="text-3xl font-extrabold text-[#be0b27]">THANK YOU!</h2>
-              <div className="bg-gray-100 inline-block px-4 py-1 rounded-full text-gray-600 font-bold text-xs uppercase tracking-widest mb-4">
+              <div className="text-6xl mb-4 grayscale opacity-80">✨</div>
+              <h2 className="text-3xl font-extrabold text-gray-800">THANK YOU!</h2>
+              <div className="bg-gray-100 inline-block px-4 py-1 rounded-full text-gray-500 font-bold text-xs uppercase tracking-widest mb-4">
                 Visitor #{visitor.visitorNumber}
               </div>
-              <p className="text-gray-700 font-medium px-4">
-                Thanks for stopping by, <span className="font-bold">{visitor.name}</span>.
+              <div className="space-y-2">
+                <p className="text-gray-700 font-medium px-4">
+                  Thanks for visiting us, <span className="font-bold">{visitor.name}</span>.
+                </p>
+                <p className="text-sm text-[#be0b27] font-bold animate-pulse">
+                  Better luck next time! 🍀
+                </p>
+              </div>
+              <p className="text-xs text-gray-400 mt-4 leading-relaxed max-w-[240px] mx-auto font-medium">
+                Even if you didn't win a physical prize today, the future of your business is a winner with ALATPay.
               </p>
             </div>
           )}
         </div>
 
-        {/* AI Insight Box - Loads asynchronously */}
-        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-left relative group min-h-[100px] flex flex-col justify-center">
+        {/* AI Insight Box - Value for everyone */}
+        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-left relative group min-h-[100px] flex flex-col justify-center transition-colors hover:bg-white hover:border-[#be0b27]/10">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AI Growth Insight</span>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${visitor.isWinner ? 'bg-red-400' : 'bg-gray-400'}`}></div>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              {visitor.isWinner ? 'Winner Bonus Insight' : 'Growth Tip for You'}
+            </span>
           </div>
           {isLoadingAi ? (
             <div className="space-y-2">
@@ -91,20 +102,21 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ visitor, onReset }) => {
         </div>
       </div>
 
+      {/* Action Buttons - Always visible */}
       <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
         <a
           href={LINKS.ONBOARDING}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center justify-between w-full p-4 bg-[#be0b27] text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all"
+          className="group flex items-center justify-between w-full p-5 bg-[#be0b27] text-white rounded-2xl font-bold shadow-lg shadow-red-900/10 hover:shadow-xl hover:-translate-y-1 transition-all"
         >
           <div className="flex flex-col items-start text-left">
-            <span className="text-sm">Start Accepting Payments</span>
-            <span className="text-[10px] opacity-70 font-normal">ALATPay Business Signup</span>
+            <span className="text-sm uppercase tracking-wide">Grow Your Business</span>
+            <span className="text-[10px] opacity-70 font-normal">Sign up for ALATPay for Business</span>
           </div>
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-[#be0b27] transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </div>
         </a>
@@ -113,14 +125,14 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ visitor, onReset }) => {
           href={LINKS.COMMUNITY}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center justify-between w-full p-4 bg-white border-2 border-[#be0b27]/10 text-[#be0b27] rounded-2xl font-bold shadow-sm hover:shadow-md transition-all"
+          className="group flex items-center justify-between w-full p-5 bg-white border-2 border-[#be0b27]/10 text-[#be0b27] rounded-2xl font-bold shadow-sm hover:shadow-md hover:border-[#be0b27]/30 transition-all"
         >
           <div className="flex flex-col items-start text-left">
-            <span className="text-sm">Developer Community</span>
-            <span className="text-[10px] text-gray-400 font-normal">Connect with makers</span>
+            <span className="text-sm uppercase tracking-wide">Join Our Dev Community</span>
+            <span className="text-[10px] text-gray-400 font-normal">Build the future of payments</span>
           </div>
-          <div className="w-8 h-8 bg-[#be0b27]/5 rounded-full flex items-center justify-center group-hover:bg-[#be0b27]/10 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-9 h-9 bg-[#be0b27]/5 rounded-xl flex items-center justify-center group-hover:bg-[#be0b27] group-hover:text-white transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
@@ -128,9 +140,9 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ visitor, onReset }) => {
 
         <button
           onClick={onReset}
-          className="w-full py-2 text-gray-400 text-xs font-bold hover:text-red-600 transition-colors"
+          className="w-full py-4 text-gray-400 text-xs font-black uppercase tracking-[0.2em] hover:text-[#be0b27] transition-colors"
         >
-          Finish & Logout
+          Finish & Close
         </button>
       </div>
     </div>
