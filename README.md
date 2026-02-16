@@ -1,20 +1,37 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# ALATPay Booth Gamification Web App
 
-# Run and deploy your AI Studio app
+An engaging, gamified lead collection application designed for the ALATPay event booth. The app features a lucky visitor counter, automated gift notifications for "odd-numbered" visitors, and personalized AI-generated business growth tips.
 
-This contains everything you need to run your app locally.
+## Key Features
+- **Gamified Lead Collection**: Clean, branded form to collect visitor details.
+- **Lucky Visitor Logic**: Automatically identifies winners based on configurable probability and visitor sequence.
+- **AI Growth Insights**: Integration with Gemini API to provide personalized fintech/business tips for every visitor.
+- **Centralized Data**: Submits leads to a central Google Sheet (Central Hub) for real-time monitoring.
+- **Admin Dashboard**: Real-time analytics and CSV export functionality for booth staff.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1rG8qHzzg2KUOtkeIpIwIc3SUhlL-XM6o
+## Tech Stack
+- **Frontend**: React 19, Tailwind CSS
+- **AI**: Google Gemini API (@google/genai)
+- **Deployment**: Vite, Netlify
+- **Data Hub**: Google Apps Script / Webhooks
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
+## Getting Started
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Build for production:
+   ```bash
+   npm run build
+   ```
+
+## Configuration
+- Update `constants.ts` to modify the `WEBHOOK_URL` and `WIN_PROBABILITY`.
+- Ensure your `VITE_API_KEY` is set in your environment variables for the AI features to function.
+
+---
+© 2025 ALATPay Booth Experience. All rights reserved.
