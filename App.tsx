@@ -33,7 +33,6 @@ const App: React.FC = () => {
   }, []);
 
   const handleAddVisitor = async (visitorData: Omit<Visitor, 'id' | 'visitorNumber' | 'isWinner' | 'timestamp'>) => {
-    // 1. Instant Calculation
     const isWinner = Math.random() < WIN_PROBABILITY;
     const baseNumber = Math.floor(Math.random() * 899) + 100;
     
@@ -52,18 +51,12 @@ const App: React.FC = () => {
       timestamp: new Date().toISOString()
     };
 
-    // 2. Immediate Local State Update
     const updatedVisitors = [...visitors, newVisitor];
     setVisitors(updatedVisitors);
     localStorage.setItem(STORAGE_KEYS.VISITORS, JSON.stringify(updatedVisitors));
-    
     setCurrentVisitor(newVisitor);
-    
-    // 3. FAST TRANSITION: Switch view before network calls start
     setView(AppView.RESULT);
 
-    // 4. BACKGROUND SUBMISSION: Fire and forget (don't await)
-    // This removes the 2-3 second delay usually caused by Google Apps Script
     submitLeadToCentralHub(newVisitor).catch(err => console.error("Background submission failed", err));
   };
 
@@ -74,12 +67,14 @@ const App: React.FC = () => {
     }
   };
 
+  const isAdmin = view === AppView.ADMIN;
+
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-4">
+    <div className={`min-h-screen relative flex flex-col items-center ${isAdmin ? 'justify-start pt-8 pb-20' : 'justify-center p-4'}`}>
       <div className="fixed top-0 -left-20 w-72 h-72 bg-red-400 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
       <div className="fixed bottom-0 -right-20 w-72 h-72 bg-red-600 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
 
-      <main className="w-full max-w-md z-10 transition-all duration-500">
+      <main className={`w-full z-10 transition-all duration-500 ${isAdmin ? 'max-w-7xl px-4 md:px-8' : 'max-w-md'}`}>
         {view === AppView.WELCOME && (
           <WelcomeScreen onStart={() => setView(AppView.FORM)} />
         )}
@@ -97,9 +92,11 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="fixed bottom-4 text-xs text-red-900/40 font-medium">
-        Powered by ALATPay
-      </footer>
+      {!isAdmin && (
+        <footer className="fixed bottom-4 text-xs text-red-900/40 font-medium">
+          Powered by ALATPay
+        </footer>
+      )}
     </div>
   );
 };

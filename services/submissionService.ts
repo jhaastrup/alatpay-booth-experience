@@ -33,3 +33,21 @@ export const submitLeadToCentralHub = async (visitor: Visitor): Promise<boolean>
     return false;
   }
 };
+
+/**
+ * Fetches all leads from the Central Hub (Google Sheets).
+ * Requires the Google Apps Script to handle doGet requests.
+ */
+export const fetchAllLeads = async (): Promise<Visitor[]> => {
+  if (!WEBHOOK_URL) return [];
+
+  try {
+    const response = await fetch(`${WEBHOOK_URL}?action=getVisitors`);
+    if (!response.ok) throw new Error('Failed to fetch global data');
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Failed to sync global data:", error);
+    return [];
+  }
+};
