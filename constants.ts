@@ -8,7 +8,7 @@ export const COLORS = {
 
 export const LINKS = {
   ONBOARDING: 'https://alatpay.ng/merchant-signup',
-  COMMUNITY: 'https://bit.ly/ALATPayDevs'
+  COMMUNITY: 'https://join.slack.com/t/alatpaybywema/shared_invite/zt-3qg7scw6c-LEdQJx40yFS2FwS2_31V0A'
 };
 
 export const STORAGE_KEYS = {
